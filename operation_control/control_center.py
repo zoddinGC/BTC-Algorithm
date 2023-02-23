@@ -11,12 +11,12 @@ import functions.config as config
 client = Client(config.API_KEY, config.API_SECRET)
 
 class OperationControl():
-    def __init__(self) -> None:
+    def __init__(self):
         self.status = 'nope'
         self.check_status()
         
     
-    def check_status(self, return_value:bool=False):
+    def check_status(self, return_value:bool=False) -> None or float:
         if self.status in ['buy', 'sell']: self.__check_operation()
 
         else:
@@ -25,7 +25,6 @@ class OperationControl():
                 info = file.readline().split(',')
                 self.status = info[0]
                 self.stop, self.target = float(info[1]), float(info[2])
-                # New feature
                 self.trailling, self.new_stop, self.quantity = float(info[3]), float(info[4]), float(info[5])
 
                 print(datetime.now())
@@ -40,7 +39,7 @@ class OperationControl():
                 return 0.5
 
 
-    def __check_operation(self):
+    def __check_operation(self) -> None:
         price = self.__getting_price()
 
         try: type(self.time)
@@ -75,7 +74,6 @@ class OperationControl():
     
     def check_condition(self, change_value1:int or float, change_value2:int or float, ma100:float, ammount_usd:float=2):
 
-        #                            New Feature
         next_operation, stop, target, open_price = check_lines(change_value1=change_value1, change_value2=change_value2, ma100=ma100)
         quantity = round(ammount_usd / abs(open_price - stop), 3) if stop != 0 else 0
 
@@ -84,8 +82,7 @@ class OperationControl():
             self.time = datetime.now()
             self.status = 'buy'
 
-            self.stop, self.target, self.quantity = stop, target, quantity # New feature
-            # New feature
+            self.stop, self.target, self.quantity = stop, target, quantity
             self.trailling, self.new_stop = target - (target - open_price) * 0.04, (target - open_price) * 0.75 + open_price
 
             self.__write_status()
@@ -95,8 +92,7 @@ class OperationControl():
             self.time = datetime.now()
             self.status = 'sell'
 
-            self.stop, self.target, self.quantity = stop, target, quantity # New feature
-            # New feature
+            self.stop, self.target, self.quantity = stop, target, quantity
             self.trailling, self.new_stop = target + (open_price - target) * 0.04, open_price - (open_price - target) * 0.75
 
             self.__write_status()
@@ -113,13 +109,15 @@ class OperationControl():
 
 
     def __logging(self, operation_price, next_operation, stop, target):
-        with open('log.txt', 'a') as file:
+        with open('logs/log.txt', 'a') as file:
             file.write(f'\n{datetime.now()}, price: {operation_price:10.3f}, type: {next_operation.upper()}, stop: {stop:10.3f}, target: {target:10.3f}')
     
+
     def __write_status(self):
         path = 'operation_control/status.txt'
         with open(path, 'w') as file:
             file.write(f'{self.status},{self.stop},{self.target},{self.trailling},{self.new_stop},{self.quantity}')
+
 
     def __buy_order(self, order_type:str, stop:float=0, target:float=0, quantity:float=0.01):
         try:
@@ -128,18 +126,20 @@ class OperationControl():
                                 symbol='BTCUSDT',
                                 side='BUY',
                                 type='MARKET',
-                                quantity=quantity)
+                                quantity=quantity
+                                )
             
             self.__logging(operation_price=self.__getting_price(), next_operation=order_type, stop=stop, target=target)           
 
-            with open('operation_log.txt', 'a') as file:
+            with open('logs/operation_log.txt', 'a') as file:
                 file.write(f'\n{datetime.now()}, Buy, {quantity}')
 
             print('BOUGHT.')
 
         except Exception as e:
-            with open('error.txt', 'a') as file:
+            with open('logs/error.txt', 'a') as file:
                 file.write(f'\n{datetime.now()}, Exception occurred: {e}')
+
 
     def __sell_order(self, order_type:str, stop:float=0, target:float=0, quantity:float=0.01):
         try:
@@ -148,17 +148,18 @@ class OperationControl():
                                 symbol='BTCUSDT',
                                 side='SELL',
                                 type='MARKET',
-                                quantity=quantity)
+                                quantity=quantity
+                                )
 
             self.__logging(operation_price=self.__getting_price(), next_operation=order_type, stop=stop, target=target)
 
-            with open('operation_log.txt', 'a') as file:
+            with open('logs/operation_log.txt', 'a') as file:
                 file.write(f'\n{datetime.now()}, Sell, {quantity}')
 
             print('SOLD.')
             
         except Exception as e:
-            with open('error.txt', 'a') as file:
+            with open('logs/error.txt', 'a') as file:
                 file.write(f'\n{datetime.now()}, Exception occurred: {e}')
 
 
@@ -192,7 +193,7 @@ class OperationControl():
 
     
     def __get_time(self):
-        with open('operation_log.txt', 'rb') as f:
+        with open('logs/operation_log.txt', 'rb') as f:
             try:  # catch OSError in case of a one line file 
                 f.seek(-2, SEEK_END)
                 while f.read(1) != b'\n':
