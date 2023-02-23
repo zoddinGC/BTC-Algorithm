@@ -1,28 +1,34 @@
+"""
+    This module will load the last 3 candles to check if
+    the condition (trigger) for the operation is met.
+"""
+
 from csv import reader
-
-
-path = 'src/resources/dataset/live_data_15min.csv'
 
 
 def __last_candles(ma100:float):
     """
-    Dict keys:
+        ma100 -> moving avarage of the last 100 candles
 
-    Kline open time     0
-    Open price          1
-    High price          2
-    Low price           3
-    Close price         4
-    Volume              5
-    Kline Close time    6
-    Quote asset volume  7
-    Number of trades    8
-    Taker buy base asset volume     9
-    Taker buy quote asset volume   10
-    Unused field, ignore.          11
+        Dict keys:
+
+        Kline open time     0
+        Open price          1
+        High price          2
+        Low price           3
+        Close price         4
+        Volume              5
+        Kline Close time    6
+        Quote asset volume  7
+        Number of trades    8
+        Taker buy base asset volume     9
+        Taker buy quote asset volume   10
+        Unused field, ignore.          11
     """
 
-    with open(path, 'r') as file:
+    path = 'src/resources/dataset/live_data_15min.csv'
+
+    with open(path, 'r', encoding='utf-8') as file:
         files = reader(file)
         files = list(files)[-3:]
 
@@ -46,10 +52,16 @@ def __last_candles(ma100:float):
         range_ok = True
 
     #     True = green,    True = green,  True: <= 200
-    return last_candle, last_second_candle, range_ok, open_price, last_open_price, last_max, last_min
+    return (last_candle, last_second_candle, range_ok, open_price, last_open_price, last_max, last_min)
 
 
 def check_lines(change_value1:int or float, change_value2:int or float, ma100:float):
+    """
+        change_value1 -> predicted value of the first neural network
+        change_value2 -> predicted value of the second neural network
+        ma100 -> moving avarage of the last 100 candles
+    """
+
     last_candle, last_second_candle, range_ok, open_price, last_open_price, last_max, last_min = __last_candles(ma100=ma100)
 
     if last_candle and range_ok and not last_second_candle:
@@ -65,5 +77,5 @@ def check_lines(change_value1:int or float, change_value2:int or float, ma100:fl
             sell_target = open_price + 2 * (open_price - sell_stop)
 
             return 'sell', sell_stop, sell_target, open_price
-    
+
     return 'nope', 0, 0, 0

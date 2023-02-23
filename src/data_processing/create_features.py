@@ -1,13 +1,30 @@
+"""
+    This module is used to create the features from the original data that
+    are used in the model to predict the final feature.
+"""
+
 import pandas as pd
 from numpy import where
 
 def clean_dataset(dataset:object):
+    """
+        dataset -> Pandas DataFrame object
+    """
+
     # Naming columns
-    dataset.columns = ['open_time', 'open_price', 'high_price', 'low_price', 'close_price', 'volume',
-                    'close_time', 'quote_asset_volume', 'trades', 'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore']
+    dataset.columns = ['open_time', 'open_price',
+        'high_price', 'low_price', 'close_price',
+        'volume', 'close_time', 'quote_asset_volume',
+        'trades', 'taker_buy_base_asset_volume',
+        'taker_buy_quote_asset_volume', 'ignore'
+    ]
 
     # Changing columns order
-    dataset = dataset[['close_price', 'high_price', 'low_price', 'open_price', 'taker_buy_base_asset_volume', 'open_time', 'volume', 'close_time', 'trades']]
+    dataset = dataset[['close_price', 'high_price',
+        'low_price', 'open_price',
+        'taker_buy_base_asset_volume', 'open_time',
+        'volume', 'close_time', 'trades'
+    ]]
 
     dataset['open_time'] = pd.to_datetime(dataset['open_time'], unit='ms')
     dataset.set_index('open_time', inplace=True, drop=False)
@@ -16,7 +33,11 @@ def clean_dataset(dataset:object):
     dataset['taker_buy_base_asset_volume'] = dataset['taker_buy_base_asset_volume'] / dataset['volume']
 
     # Set bullish or bearish
-    dataset['Bull'] = where(dataset['high_price'] > dataset['high_price'].shift(1), 1, 0).astype('int64')
+    dataset['Bull'] = where(
+        dataset['high_price'] > dataset['high_price'].shift(1), # condition
+        1, # return if the condition is met
+        0  # return if the condition is NOT met
+    ).astype('int64')
 
     # Calculate OBV indicator
     dataset['OBV'] = where(dataset['close_price'] > dataset['close_price'].shift(1), dataset['volume'], -dataset['volume'])
