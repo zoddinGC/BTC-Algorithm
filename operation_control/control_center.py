@@ -1,7 +1,9 @@
 from binance.client import Client
-from requests import get
+import requests
 from datetime import datetime
-from os import SEEK_END, SEEK_CUR
+import csv
+import os
+from time import sleep
 
 # Local Imports
 from operation_control.able_operation import check_lines
@@ -20,13 +22,12 @@ class OperationControl():
         if self.status in ['buy', 'sell']: self.__check_operation()
 
         else:
-            path = 'operation_control/status.txt'
+            path = 'operation_control/status.csv'
             with open(path, 'r') as file:
-                info = file.readline().split(',')
+                info = list(csv.reader(file))[0]
                 self.status = info[0]
                 self.stop = float(info[1])
                 self.target = float(info[2])
-
                 print(datetime.now())
 
             if self.status in ['buy', 'sell']: self.__check_operation()
@@ -36,78 +37,89 @@ class OperationControl():
             if self.status in ['buy', 'sell']:
                 return 0
             else:
-                return 0.5
+                return 0.7
 
 
     def __check_operation(self):
         price = self.__getting_price()
 
-        try: type(self.time)
-        except: self.__get_time()
+        try:
+            type(self.time)
+        except:
+            self.__get_time()
 
         if self.status == 'sell':
 
             if price >= self.stop:
-                self.__buy_order('stop')
-
+                self.__buy_order()
                 self.status = 'nope'
                 self.target = 0
                 self.stop = 0
                 self.__write_status()
+                self.__logging(operation_price=price, next_operation='STOP', stop=0, target=0)
 
             elif price <= self.target:
-                self.__buy_order('gain')
-
+                self.__buy_order()
                 self.status = 'nope'
                 self.target = 0
                 self.stop = 0
                 self.__write_status()
+                self.__logging(operation_price=price, next_operation='GAIN', stop=0, target=0)
 
         elif self.status == 'buy':
             if price <= self.stop:
-                self.__sell_order('stop')
-
+                self.__sell_order()
                 self.status = 'nope'
                 self.target = 0
                 self.stop = 0
                 self.__write_status()
+                self.__logging(operation_price=price, next_operation='STOP', stop=0, target=0)
 
             elif price >= self.target:
-                self.__sell_order('gain')
-
+                self.__sell_order()
                 self.status = 'nope'
                 self.target = 0
                 self.stop = 0
                 self.__write_status()
+                self.__logging(operation_price=price, next_operation='GAIN', stop=0, target=0)
 
         print(price, datetime.now())
                 
     
-    def check_condition(self,change_value1:int or float, change_value2:int or float, ma100:float):
-        next_operation, stop, target = check_lines(change_value1=change_value1, change_value2=change_value2, ma100=ma100)
+    def check_condition(self,change_value1:int or float, change_value2:int or float):
+        next_operation, stop, target = check_lines(change_value1=change_value1, change_value2=change_value2)
 
         if self.status == 'nope' and next_operation == 'buy' and datetime.now().minute % 15 == 0:
-            self.__buy_order(' buy', stop, target)
+            self.__buy_order()
             self.time = datetime.now()
             self.status = 'buy'
+            buy_price = self.__getting_price()
+
+            self.__logging(operation_price=buy_price, next_operation=self.status, stop=stop, target=target)
 
             self.stop = stop
             self.target = target
         
         elif self.status == 'nope' and next_operation == 'sell' and datetime.now().minute % 15 == 0:
-            self.__sell_order('sell', stop, target)
+            self.__sell_order()
             self.time = datetime.now()
             self.status = 'sell'
+            sell_price = self.__getting_price()
+
+            self.__logging(operation_price=sell_price, next_operation=self.status, stop=stop, target=target)
 
             self.stop = stop
             self.target = target
         
         elif (self.status != 'nope' and int((datetime.now() - self.time).total_seconds()) >= 36_000) or \
              (self.status != 'nope'and next_operation != 'nope' and next_operation != self.status):
-            self.__buy_order('trailing') if self.status == 'sell' else self.__sell_order('trailling')
+            self.__buy_order() if self.status == 'sell' else self.__sell_order()
             self.status = 'nope'
+            current_price = self.__getting_price()
             self.stop = 0
             self.target = 0
+
+            self.__logging(operation_price=current_price, next_operation='trailling', stop=stop, target=target)
         
         else:
             self.__logging(operation_price=0, next_operation=self.status, stop=stop, target=target)
@@ -118,26 +130,23 @@ class OperationControl():
 
     def __logging(self, operation_price, next_operation, stop, target):
         with open('log.txt', 'a') as file:
-            file.write(f'\n{datetime.now()}, price: {operation_price:10.3f}, type: {next_operation.upper()}, stop: {stop:10.3f}, target: {target:10.3f}')
+            file.write(f'\n{datetime.now()}, B/S PRICE:{operation_price}, TYPE: {next_operation}, STOP: {stop}, TARGET: {target}')
     
     def __write_status(self):
-        path = 'operation_control/status.txt'
+        path = 'operation_control/status.csv'
         with open(path, 'w') as file:
             file.write(f'{self.status},{self.stop},{self.target}')
 
-    def __buy_order(self, order_type:str, stop:float=0, target:float=0, quantity:float=0.01):
+    def __buy_order(self, quantity:float=0.01):
         try:
-            print('BUYING...', order_type.upper())
+            print('BUYING...')
             buy_order = client.create_test_order(
                                 symbol='BTCUSDT',
                                 side='BUY',
                                 type='MARKET',
                                 quantity=quantity)
-            
-            self.__logging(operation_price=self.__getting_price(), next_operation=order_type, stop=stop, target=target)           
-
             with open('operation_log.txt', 'a') as file:
-                file.write(f'\n{datetime.now()}, Buy, {quantity}')
+                file.write(f'\n{datetime.now()}, Buy {quantity}')
 
             print('BOUGHT.')
 
@@ -145,19 +154,16 @@ class OperationControl():
             with open('error.txt', 'a') as file:
                 file.write(f'\n{datetime.now()}, Exception occurred: {e}')
 
-    def __sell_order(self, order_type:str, stop:float=0, target:float=0, quantity:float=0.01):
+    def __sell_order(self, quantity:float=0.01):
         try:
-            print('SELLING...', order_type.upper())
+            print('SELLING...')
             sell_order = client.create_test_order(
                                 symbol='BTCUSDT',
                                 side='SELL',
                                 type='MARKET',
                                 quantity=quantity)
-
-            self.__logging(operation_price=self.__getting_price(), next_operation=order_type, stop=stop, target=target)
-
             with open('operation_log.txt', 'a') as file:
-                file.write(f'\n{datetime.now()}, Sell, {quantity}')
+                file.write(f'\n{datetime.now()}, Sell {quantity}')
 
             print('SOLD.')
             
@@ -175,26 +181,30 @@ class OperationControl():
 
 
     def __getting_price(self):
-        # Defining key/request url
-        key = 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'
+        # defining key/request url
+        key = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
 
-        # Requesting data from url
+        # requesting data from url
         while True:
             try:
-                # Get from requests
-                data = get(key)  
+                data = requests.get(key)  
                 break
-            except: continue
+            except:
+                sleep(0.5)
+                data = requests.get(key)  
+                break
             
-        return float(data.json()['price'])
+        data = data.json()
+
+        return float(data['price'])
 
     
     def __get_time(self):
         with open('operation_log.txt', 'rb') as f:
             try:  # catch OSError in case of a one line file 
-                f.seek(-2, SEEK_END)
+                f.seek(-2, os.SEEK_END)
                 while f.read(1) != b'\n':
-                    f.seek(-2, SEEK_CUR)
+                    f.seek(-2, os.SEEK_CUR)
             except OSError:
                 f.seek(0)
             last_line = f.readline().decode()
