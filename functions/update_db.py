@@ -9,13 +9,13 @@ from time import sleep
 client = Client(config.API_KEY, config.API_SECRET)
 interval = Client.KLINE_INTERVAL_15MINUTE
 
-def update_db(test:bool=False):
+def update_db(first_load_data:bool=False):
     print('Collecting Data...')
     while True:
         candles = client.get_historical_klines(symbol='BTCUSDT', interval=interval, limit=101)
         last_minute = datetime.fromtimestamp(int(candles[-1][0])/1000).minute
 
-        if last_minute == datetime.now().minute or test: break
+        if last_minute == datetime.now().minute or first_load_data: break
 
         print(f'Time different! {last_minute}, {datetime.now().minute}')
         sleep(0.05)

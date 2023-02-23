@@ -24,10 +24,9 @@ class OperationControl():
             with open(path, 'r') as file:
                 info = file.readline().split(',')
                 self.status = info[0]
-                self.stop = float(info[1])
-                self.target = float(info[2])
-                self.trailling = float(info[3])
-                self.new_stop = float(info[4])
+                self.stop, self.target = float(info[1]), float(info[2])
+                # New feature
+                self.trailling, self.new_stop, self.quantity = float(info[3]), float(info[4]), float(info[5])
 
                 print(datetime.now())
 
@@ -52,77 +51,64 @@ class OperationControl():
             if price <= self.trailling: self.stop = self.new_stop
 
             if price >= self.stop:
-                self.__buy_order('stop')
-
-                self.status = 'nope'
-                self.target = 0
-                self.stop = 0
-                self.__write_status()
+                self.__buy_order('stop', quantity=self.quantity)
+                self.__close_operation_status()
 
             elif price <= self.target:
-                self.__buy_order('gain')
-
-                self.status = 'nope'
-                self.target = 0
-                self.stop = 0
-                self.__write_status()
+                self.__buy_order('gain', quantity=self.quantity)
+                self.__close_operation_status()
 
         elif self.status == 'buy':
             # New Feature
             if price >= self.trailling: self.stop = self.new_stop
 
             if price <= self.stop:
-                self.__sell_order('stop')
-
-                self.status = 'nope'
-                self.target = 0
-                self.stop = 0
-                self.__write_status()
+                self.__sell_order('stop', quantity=self.quantity)
+                self.__close_operation_status()
 
             elif price >= self.target:
-                self.__sell_order('gain')
-
-                self.status = 'nope'
-                self.target = 0
-                self.stop = 0
-                self.__write_status()
+                self.__sell_order('gain', quantity=self.quantity)
+                self.__close_operation_status()
 
         print(price, datetime.now())
                 
     
-    def check_condition(self,change_value1:int or float, change_value2:int or float, ma100:float):
+    def check_condition(self, change_value1:int or float, change_value2:int or float, ma100:float, ammount_usd:float=2):
+
         #                            New Feature
         next_operation, stop, target, open_price = check_lines(change_value1=change_value1, change_value2=change_value2, ma100=ma100)
+        quantity = round(ammount_usd / abs(open_price - stop), 3) if stop != 0 else 0
 
         if self.status == 'nope' and next_operation == 'buy' and datetime.now().minute % 15 == 0:
-            self.__buy_order(' buy', stop, target)
+            self.__buy_order(' buy', stop, target, quantity=quantity)
             self.time = datetime.now()
             self.status = 'buy'
 
-            self.stop, self.target = stop, target
+            self.stop, self.target, self.quantity = stop, target, quantity # New feature
             # New feature
             self.trailling, self.new_stop = target - (target - open_price) * 0.04, (target - open_price) * 0.75 + open_price
+
+            self.__write_status()
         
         elif self.status == 'nope' and next_operation == 'sell' and datetime.now().minute % 15 == 0:
-            self.__sell_order('sell', stop, target)
+            self.__sell_order('sell', stop, target, quantity=quantity)
             self.time = datetime.now()
             self.status = 'sell'
 
-            self.stop, self.target = stop, target
+            self.stop, self.target, self.quantity = stop, target, quantity # New feature
             # New feature
-            self.trailling, self.new_stop = target + (target - open_price) * 0.04, open_price - (target - open_price) * 0.75
+            self.trailling, self.new_stop = target + (open_price - target) * 0.04, open_price - (open_price - target) * 0.75
+
+            self.__write_status()
         
-        elif (self.status != 'nope' and int((datetime.now() - self.time).total_seconds()) >= 36_000) or \
+        elif (self.status != 'nope' and int((datetime.now() - self.time).total_seconds()) >= 21_600) or \
              (self.status != 'nope'and next_operation != 'nope' and next_operation != self.status):
-            self.__buy_order('trailing') if self.status == 'sell' else self.__sell_order('trailling')
-            self.status = 'nope'
-            self.stop = 0
-            self.target = 0
+            self.__buy_order('trai', quantity=self.quantity) if self.status == 'sell' else self.__sell_order('trai', quantity=self.quantity)
+            self.__close_operation_status()
         
         else:
             self.__logging(operation_price=0, next_operation=self.status, stop=stop, target=target)
-
-        self.__write_status()
+            
         self.check_status()
 
 
@@ -133,7 +119,7 @@ class OperationControl():
     def __write_status(self):
         path = 'operation_control/status.txt'
         with open(path, 'w') as file:
-            file.write(f'{self.status},{self.stop},{self.target},{self.trailling},{self.new_stop}')
+            file.write(f'{self.status},{self.stop},{self.target},{self.trailling},{self.new_stop},{self.quantity}')
 
     def __buy_order(self, order_type:str, stop:float=0, target:float=0, quantity:float=0.01):
         try:
@@ -182,6 +168,12 @@ class OperationControl():
             self.__buy_order(btc_balance)
         elif btc_balance > 0:
             self.__sell_order(btc_balance)
+
+    
+    def __close_operation_status(self):
+        self.status = 'nope'
+        self.target, self.stop, self.trailling, self.new_stop, self.quantity = 0, 0, 0, 0, 0
+        self.__write_status()
 
 
     def __getting_price(self):
