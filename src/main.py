@@ -6,14 +6,14 @@ from warnings import filterwarnings
 filterwarnings('ignore')
 
 # Local imports
-from functions.update_db import update_db
-from operation_control.prepross_data import PreProssData
-from operation_control.control_center import OperationControl
+from data_processing.update_database import update_database
+from features.prepross_data import PreProssData
+from features.operation_control_center import OperationControl
 
 
 def check_api(first_load_data:bool = False):
-    update_db(first_load_data)
- 
+    update_database(first_load_data)
+
     change_value1, change_value2, ma100 = predict.predict_all_values()
 
     operation_control.check_condition(
@@ -24,7 +24,7 @@ def check_api(first_load_data:bool = False):
     )
 
 """
-            BTC TRADE V3.2
+              BTC TRADE V3.2
     =======  TESTING  FEATURES  ======
     ✓ Move to (G) 1.75 v 1 (L) after prices hits 2 dollars (or 0.015%) close to target (trailling)
     ✓ Fix Gain to 4 dol and Loss to 2 dol (ammount_usd)
@@ -38,6 +38,7 @@ def check_api(first_load_data:bool = False):
     • Test RandomForest, XGBoost, and LGBM models before new neural network model
     • Derivate (triangle) of Price x Time
 """
+
 
 def schedule_api(timeframe = 15):
     check_api(first_load_data = True)

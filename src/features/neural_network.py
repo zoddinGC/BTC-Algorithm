@@ -1,6 +1,4 @@
 from datetime import datetime
-from keras.layers import LSTM, Dense
-from keras.models import Sequential
 from keras.models import load_model
 import numpy as np
 import pandas as pd
@@ -13,14 +11,14 @@ class NeuralNetwork():
     def __get_model(self, start:str):
         import os
 
-        files = os.listdir('resources/models')
+        files = os.listdir('src/resources/models')
 
         return files[0] if start == 'AA' else files[1]
 
     
     def pre_load_model(self, start:str):
         file = self.__get_model(start)
-        path = f'resources/models/{file}'
+        path = f'src/resources/models/{file}'
         self.model = load_model(path)
 
 

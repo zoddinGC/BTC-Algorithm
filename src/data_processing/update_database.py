@@ -1,6 +1,6 @@
 # Import libraries
 from binance.client import Client
-import functions.config as config
+import config
 from csv import writer
 from datetime import datetime
 from time import sleep
@@ -9,7 +9,7 @@ from time import sleep
 client = Client(config.API_KEY, config.API_SECRET)
 interval = Client.KLINE_INTERVAL_15MINUTE
 
-def update_db(first_load_data:bool=False):
+def update_database(first_load_data:bool=False):
     print('Collecting Data...')
     while True:
         candles = client.get_historical_klines(symbol='BTCUSDT', interval=interval, limit=101)
@@ -22,7 +22,7 @@ def update_db(first_load_data:bool=False):
 
     print('Writting...')
     
-    csvfile = open(f'resources/dataset/daily_15min.csv', 'w', newline='')
+    csvfile = open(f'src/resources/dataset/live_data_15min.csv', 'w', newline='')
     save_csv = writer(csvfile, delimiter=',')
 
     for candlestick in candles:

@@ -2,8 +2,8 @@ from joblib import load
 import pandas as pd
 
 # Local imports
-from functions.create_features import clean_dataset
-from operation_control.neural_network import NeuralNetwork
+from data_processing.create_features import clean_dataset
+from features.neural_network import NeuralNetwork
 
 
 class PreProssData():
@@ -20,12 +20,12 @@ class PreProssData():
 
     def get_scaler(self):
         # Joblib
-        scaler = load('resources/scaler/scaler.save')
+        scaler = load('src/resources/scaler/scaler.save')
         return scaler
 
     
     def get_scaled_data(self):
-        dataset = pd.read_csv('resources/dataset/daily_15min.csv')        
+        dataset = pd.read_csv('src/resources/dataset/live_data_15min.csv')        
         df, ma100 = clean_dataset(dataset=dataset)
 
         scaled_data = self.scaler.transform(df[-self.candles-3:-3])

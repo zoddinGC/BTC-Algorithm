@@ -1,7 +1,7 @@
 from csv import reader
 
 
-path = 'resources/dataset/daily_15min.csv'
+path = 'src/resources/dataset/live_data_15min.csv'
 
 
 def __last_candles(ma100:float):

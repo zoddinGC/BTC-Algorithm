@@ -4,8 +4,8 @@ from datetime import datetime
 from os import SEEK_END, SEEK_CUR
 
 # Local Imports
-from operation_control.able_operation import check_lines
-import functions.config as config
+from features.check_condition import check_lines
+import config as config
 
 # Creating objects
 client = Client(config.API_KEY, config.API_SECRET)
@@ -20,7 +20,7 @@ class OperationControl():
         if self.status in ['buy', 'sell']: self.__check_operation()
 
         else:
-            path = 'operation_control/status.txt'
+            path = 'src/features/status.txt'
             with open(path, 'r') as file:
                 info = file.readline().split(',')
                 self.status = info[0]
@@ -109,12 +109,12 @@ class OperationControl():
 
 
     def __logging(self, operation_price, next_operation, stop, target):
-        with open('logs/log.txt', 'a') as file:
+        with open('src/logs/log.txt', 'a') as file:
             file.write(f'\n{datetime.now()}, price: {operation_price:10.3f}, type: {next_operation.upper()}, stop: {stop:10.3f}, target: {target:10.3f}')
     
 
     def __write_status(self):
-        path = 'operation_control/status.txt'
+        path = 'src/features/status.txt'
         with open(path, 'w') as file:
             file.write(f'{self.status},{self.stop},{self.target},{self.trailling},{self.new_stop},{self.quantity}')
 
@@ -131,13 +131,13 @@ class OperationControl():
             
             self.__logging(operation_price=self.__getting_price(), next_operation=order_type, stop=stop, target=target)           
 
-            with open('logs/operation_log.txt', 'a') as file:
+            with open('src/logs/operation_log.txt', 'a') as file:
                 file.write(f'\n{datetime.now()}, Buy, {quantity}')
 
             print('BOUGHT.')
 
         except Exception as e:
-            with open('logs/error.txt', 'a') as file:
+            with open('src/logs/error.txt', 'a') as file:
                 file.write(f'\n{datetime.now()}, Exception occurred: {e}')
 
 
@@ -153,13 +153,13 @@ class OperationControl():
 
             self.__logging(operation_price=self.__getting_price(), next_operation=order_type, stop=stop, target=target)
 
-            with open('logs/operation_log.txt', 'a') as file:
+            with open('src/logs/operation_log.txt', 'a') as file:
                 file.write(f'\n{datetime.now()}, Sell, {quantity}')
 
             print('SOLD.')
             
         except Exception as e:
-            with open('logs/error.txt', 'a') as file:
+            with open('src/logs/error.txt', 'a') as file:
                 file.write(f'\n{datetime.now()}, Exception occurred: {e}')
 
 
@@ -193,7 +193,7 @@ class OperationControl():
 
     
     def __get_time(self):
-        with open('logs/operation_log.txt', 'rb') as f:
+        with open('src/logs/operation_log.txt', 'rb') as f:
             try:  # catch OSError in case of a one line file 
                 f.seek(-2, SEEK_END)
                 while f.read(1) != b'\n':
