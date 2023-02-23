@@ -24,3 +24,8 @@
 2023-02-10 12:13:22.660018, price:      0.000, type: NOPE, stop:      0.000, target:      0.000
 2023-02-10 12:14:17.635003, price:      0.000, type: NOPE, stop:      0.000, target:      0.000
 2023-02-10 12:15:36.462915, price:      0.000, type: NOPE, stop:      0.000, target:      0.000
+2023-02-23 17:02:07.841550, 
+                price:      0.000, 
+                type: NOPE, 
+                stop:      0.000, 
+                target:      0.000
