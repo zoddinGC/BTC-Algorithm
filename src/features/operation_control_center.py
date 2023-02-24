@@ -35,6 +35,7 @@ class OperationControl():
         self.trailling = 0       # price to stop gain
         self.new_stop =  0       # price of the new stop gain
         self.quantity =  0       # quantity of bitcoin to buy/sell
+        self.time = 0
         self.check_status()
 
 
@@ -193,12 +194,14 @@ class OperationControl():
         path = 'src/features/status.txt'
         with open(path, 'w', encoding='utf-8') as file:
             file.write(
-                f"""{self.status},
+                f"""
+                {self.status},
                 {self.stop},
                 {self.target},
                 {self.trailling},
                 {self.new_stop},
-                {self.quantity}"""
+                {self.quantity}
+                """
             )
 
 
@@ -212,7 +215,12 @@ class OperationControl():
                                 quantity=quantity
                                 )
 
-            self.__logging(operation_price=self.__getting_price(), next_operation=order_type, stop=stop, target=target)           
+            self.__logging(
+                operation_price=self.__getting_price(),
+                next_operation=order_type,
+                stop=stop,
+                target=target
+            )
 
             with open('src/logs/operation_log.txt', 'a', encoding='utf-8') as file:
                 file.write(f'\n{datetime.now()}, Buy, {quantity}')
@@ -234,7 +242,12 @@ class OperationControl():
                                 quantity=quantity
                                 )
 
-            self.__logging(operation_price=self.__getting_price(), next_operation=order_type, stop=stop, target=target)
+            self.__logging(
+                operation_price=self.__getting_price(),
+                next_operation=order_type,
+                stop=stop,
+                target=target
+            )
 
             with open('src/logs/operation_log.txt', 'a', encoding='utf-8') as file:
                 file.write(f'\n{datetime.now()}, Sell, {quantity}')
