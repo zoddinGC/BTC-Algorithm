@@ -20,9 +20,6 @@ def main():
     else:
         print(">>> Development environment passes all tests!")
 
-    print(sys.executable)
-    print(sys.path)
-
 
 if __name__ == '__main__':
     main()
