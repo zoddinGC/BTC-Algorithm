@@ -29,3 +29,13 @@
                 type: NOPE, 
                 stop:      0.000, 
                 target:      0.000
+2023-02-24 15:03:53.826742, 
+                price:      0.000, 
+                type: NOPE, 
+                stop:      0.000, 
+                target:      0.000
+2023-02-24 15:32:18.990955, 
+                price:      0.000, 
+                type: NOPE, 
+                stop:      0.000, 
+                target:      0.000
