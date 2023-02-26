@@ -4,7 +4,7 @@
     Account and save logs of what is being done.
 """
 
-from datetime import datetime
+from datetime import datetime as dt
 from os import SEEK_END, SEEK_CUR
 from os import getenv
 from requests import get
@@ -65,7 +65,7 @@ class OperationControl():
                 self.new_stop =  float(info[4]) # price of the new stop gain
                 self.quantity =  float(info[5]) # quantity of Bitcoin
 
-                print(datetime.now())
+                print(dt.now())
 
             if self.status in ['buy', 'sell']:
                 self.__check_operation()
@@ -87,7 +87,6 @@ class OperationControl():
             self.__get_time()
 
         if self.status == 'sell':
-            # New feature
             if price <= self.trailling:
                 self.stop = self.new_stop
 
@@ -100,7 +99,6 @@ class OperationControl():
                 self.__close_operation_status()
 
         elif self.status == 'buy':
-            # New Feature
             if price >= self.trailling:
                 self.stop = self.new_stop
 
@@ -112,7 +110,7 @@ class OperationControl():
                 self.__sell_order('gain', quantity=self.quantity)
                 self.__close_operation_status()
 
-        print(price, datetime.now())
+        print(price, dt.now())
 
 
     def check_condition(
@@ -141,9 +139,9 @@ class OperationControl():
 
         quantity = round(ammount_usd / abs(open_price - stop), 3) if stop != 0 else 0
 
-        if self.status == 'nope' and next_operation == 'buy' and datetime.now().minute % 15 == 0:
+        if self.status == 'nope' and next_operation == 'buy' and dt.now().minute % 15 == 0:
             self.__buy_order(' buy', stop, target, quantity=quantity)
-            self.time = datetime.now()
+            self.time = dt.now()
             self.status = 'buy'
 
             self.stop, self.target, self.quantity = stop, target, quantity
@@ -152,9 +150,9 @@ class OperationControl():
 
             self.__write_status()
 
-        elif self.status == 'nope' and next_operation == 'sell' and datetime.now().minute % 15 == 0:
+        elif self.status == 'nope' and next_operation == 'sell' and dt.now().minute % 15 == 0:
             self.__sell_order('sell', stop, target, quantity=quantity)
-            self.time = datetime.now()
+            self.time = dt.now()
             self.status = 'sell'
 
             self.stop, self.target, self.quantity = stop, target, quantity
@@ -163,7 +161,7 @@ class OperationControl():
 
             self.__write_status()
 
-        elif (self.status != 'nope' and int((datetime.now() - self.time).total_seconds()) >= 21_600) or \
+        elif (self.status != 'nope' and int((dt.now() - self.time).total_seconds()) >= 21_600) or \
              (self.status != 'nope'and next_operation != 'nope' and next_operation != self.status):
 
             if self.status == 'sell':
@@ -182,7 +180,7 @@ class OperationControl():
     def __logging(self, operation_price, next_operation, stop, target):
         with open('src/logs/log.txt', 'a', encoding='utf-8') as file:
             file.write(
-                f"""\n{datetime.now()}, 
+                f"""\n{dt.now()}, 
                 price: {operation_price:10.3f}, 
                 type: {next_operation.upper()}, 
                 stop: {stop:10.3f}, 
@@ -223,13 +221,13 @@ class OperationControl():
             )
 
             with open('src/logs/operation_log.txt', 'a', encoding='utf-8') as file:
-                file.write(f'\n{datetime.now()}, Buy, {quantity}')
+                file.write(f'\n{dt.now()}, Buy, {quantity}')
 
             print('BOUGHT.')
 
         except Exception as e:
             with open('src/logs/error.txt', 'a', encoding='utf-8') as file:
-                file.write(f'\n{datetime.now()}, Exception occurred: {e}')
+                file.write(f'\n{dt.now()}, Exception occurred: {e}')
 
 
     def __sell_order(self, order_type:str, stop:float=0, target:float=0, quantity:float=0.01):
@@ -250,13 +248,13 @@ class OperationControl():
             )
 
             with open('src/logs/operation_log.txt', 'a', encoding='utf-8') as file:
-                file.write(f'\n{datetime.now()}, Sell, {quantity}')
+                file.write(f'\n{dt.now()}, Sell, {quantity}')
 
             print('SOLD.')
 
         except Exception as e:
             with open('src/logs/error.txt', 'a', encoding='utf-8') as file:
-                file.write(f'\n{datetime.now()}, Exception occurred: {e}')
+                file.write(f'\n{dt.now()}, Exception occurred: {e}')
 
 
     def __check_liquidity(self):
@@ -300,4 +298,4 @@ class OperationControl():
             last_line = f.readline().decode()
 
             last_line = last_line[:last_line.find('.')]
-            self.time = datetime.strptime(last_line, '%Y-%m-%d %H:%M:%S')
+            self.time = dt.strptime(last_line, '%Y-%m-%d %H:%M:%S')
