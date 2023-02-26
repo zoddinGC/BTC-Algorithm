@@ -25,11 +25,8 @@ class PreProssData():
         self.scaler = self.get_scaler()
         self.candles = candles
 
-        self.__change_above = NeuralNetwork()
-        self.__change_above.pre_load_model(start='AA')
-
-        self.__change_below = NeuralNetwork()
-        self.__change_below.pre_load_model(start='BA')
+        self.__change_above = NeuralNetwork(model_name='AA')
+        self.__change_below = NeuralNetwork(model_name='BA')
 
 
     def get_scaler(self):

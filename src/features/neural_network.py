@@ -10,14 +10,17 @@ from keras.models import load_model
 
 class NeuralNetwork():
     """
-        This class instances one variable called 'model' and
-        takes no arguments on the first call.
+        This Class will load the neural network model by a given
+        name such as 'AA' or 'BA'.
+
+        *model_name: str -> 'AA' or 'BA'
     """
 
-    def __init__(self):
-        self.model = None
+    def __init__(self, model_name:str):
+        self._model = self.__set_model(model_name)
 
-    def __get_model(self, start:str):
+
+    def __set_model(self, model_name:str) -> object:
         """
             This module will locate all the Neural Network models
             stored in the script.
@@ -25,20 +28,11 @@ class NeuralNetwork():
             ~It will be improved in future updates
         """
 
-        files = listdir('src/resources/models')
+        path = 'src/resources/models'
+        files = listdir(path)
+        file = files[0] if model_name == 'AA' else files[1]
 
-        return files[0] if start == 'AA' else files[1]
-
-
-    def pre_load_model(self, start:str) -> None:
-        """
-            This module is responsible to load the Keras Neural
-            Network model.
-        """
-
-        file = self.__get_model(start)
-        path = f'src/resources/models/{file}'
-        self.model = load_model(path)
+        return load_model(path + '/' + file)
 
 
     def neural_predict(self, X_input:object) -> float:
@@ -47,4 +41,4 @@ class NeuralNetwork():
             features to predict the target feature.
         """
 
-        return self.model.predict(X_input, verbose=0)
+        return self._model.predict(X_input, verbose=0)
