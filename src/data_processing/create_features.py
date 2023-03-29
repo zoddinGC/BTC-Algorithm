@@ -62,7 +62,9 @@ def clean_dataset(dataset:object):
 
     # Calculate MACD
     # Calculate the 12-period and 26-period EMAs
-    dataset['MACD'] = dataset['close_price'].ewm(span=12).mean() - dataset['close_price'].ewm(span=26).mean()
+    dataset['MACD'] = (
+        dataset['close_price'].ewm(span=12).mean() - dataset['close_price'].ewm(span=26).mean()
+    )
 
     # Calculate the MACD histogram
     dataset['Hist'] = dataset['MACD'] - dataset['MACD'].ewm(span=9).mean()
@@ -70,10 +72,18 @@ def clean_dataset(dataset:object):
     ma100 = dataset['close_price'].rolling(100).mean()[-1]
 
     # Removing unused columns
-    dataset.drop(['open_time', 'close_time', '21-day low', '21-day high', 'MACD'], axis=1, inplace=True)
+    dataset.drop(
+        ['open_time', 'close_time', '21-day low', '21-day high', 'MACD'],
+        axis=1,
+        inplace=True
+    )
 
     # Removing NaN data
     dataset.dropna(inplace=True)
 
     # Saving on memory
     return dataset, ma100
+
+
+if __name__ == '__main__':
+    clean_dataset()

@@ -41,7 +41,7 @@ def download_data(
     ]
 
     # Write/Save the data in a csv file
-    with open(f'BTC/data/raw/{file_name}.csv', 'w', encoding='utf-8', newline='') as file:
+    with open(f'data/raw/{file_name}.csv', 'w', encoding='utf-8', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(columns)
         writer.writerows(candles)
