@@ -54,3 +54,8 @@
                 type: NOPE, 
                 stop:  23512.570, 
                 target:  23320.000
+2023-02-26 19:45:54.765678, 
+                price:      0.000, 
+                type: NOPE, 
+                stop:      0.000, 
+                target:      0.000
